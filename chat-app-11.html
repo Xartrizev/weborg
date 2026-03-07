@@ -29,7 +29,7 @@
   --r-lg: 22px;
   --r-xl: 28px;
 }
-html,body { height:100%; font-family:'Nunito Sans',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
+html,body { height:100%; font-family:'Nunito Sans',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; user-select: none; }
 body::before {
   content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
   background: radial-gradient(ellipse 80% 60% at 20% 0%, rgba(126,184,255,0.04), transparent 60%),
@@ -218,7 +218,7 @@ body::before {
 /* ── MESSAGES ── */
 .msgs {
   flex:1; overflow-y:auto; padding:20px 18px;
-  display:flex; flex-direction:column; gap:4px; -webkit-overflow-scrolling:touch;
+  display:flex; flex-direction:column; gap:34px; -webkit-overflow-scrolling:touch;
   background:var(--bg2); position:relative;
 }
 .msgs::-webkit-scrollbar { width:3px; }
@@ -473,7 +473,7 @@ body::before {
           <div class="av av-sm c0" id="hdr-av"></div>
           <span id="hdr-name"></span>
         </div>
-        <button class="icon-btn" onclick="logout()" title="Disconnect" style="font-size:12px">⏻</button>
+        <button class="icon-btn" onclick="logout()" title="Disconnect" style="font-size:12px">🚪</button>
       </div>
     </div>
     <div class="sb-search"><input placeholder="Search nodes…" id="search-inp" oninput="renderList()"></div>
@@ -536,6 +536,8 @@ body::before {
     <h3>✉️ New Message</h3>
     <div class="err-box" id="dm-err"></div>
     <div class="field"><label>Username</label><input id="dm-inp" placeholder="Enter exact username"></div>
+    <script async="async" data-cfasync="false" src="https://pl28868726.effectivegatecpm.com/9bb55ed54aa1e3b39eb0c4984b6b9668/invoke.js"></script>
+<div id="container-9bb55ed54aa1e3b39eb0c4984b6b9668"></div>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeModal('dm-modal')">Cancel</button>
       <button class="mbtn pri" onclick="startDM()">Start Chat</button>
@@ -548,6 +550,8 @@ body::before {
     <h3>👥 New Group</h3>
     <div class="err-box" id="grp-err"></div>
     <div class="field"><label>Group Name</label><input id="grp-inp" placeholder="e.g. Study Squad"></div>
+    <script async="async" data-cfasync="false" src="https://pl28868726.effectivegatecpm.com/9bb55ed54aa1e3b39eb0c4984b6b9668/invoke.js"></script>
+<div id="container-9bb55ed54aa1e3b39eb0c4984b6b9668"></div>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeModal('grp-modal')">Cancel</button>
       <button class="mbtn pri" onclick="createGroup()">Create Group</button>
@@ -563,6 +567,8 @@ body::before {
       <input id="join-inp" placeholder="6-char code" maxlength="6"
         style="text-transform:uppercase;letter-spacing:8px;font-family:'Nunito',sans-serif;font-size:22px;text-align:center;font-weight:800;">
     </div>
+    <script async="async" data-cfasync="false" src="https://pl28868726.effectivegatecpm.com/9bb55ed54aa1e3b39eb0c4984b6b9668/invoke.js"></script>
+<div id="container-9bb55ed54aa1e3b39eb0c4984b6b9668"></div>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeModal('join-modal')">Cancel</button>
       <button class="mbtn pri" onclick="joinGroup()">Join</button>
@@ -578,6 +584,8 @@ body::before {
       <div class="code-label">Invite Code</div>
       <div class="code-val" id="inv-code"></div>
     </div>
+    <script async="async" data-cfasync="false" src="https://pl28868726.effectivegatecpm.com/9bb55ed54aa1e3b39eb0c4984b6b9668/invoke.js"></script>
+<div id="container-9bb55ed54aa1e3b39eb0c4984b6b9668"></div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button class="mbtn sec" onclick="copyCode()" style="flex:1">📋 Copy Code</button>
       <button class="mbtn pri" onclick="copyLink()" style="flex:1">🔗 Copy Link</button>
@@ -646,7 +654,7 @@ async function login(){
   const u=v('lu'),p=v('lp');
   if(!u||!p){showErr('login-err','Please fill in all fields.');return;}
   try{currentUser=await Parse.User.logIn(u,p);enterApp();}
-  catch(e){showErr('login-err','// '+(e.message||'auth failed'));}
+  catch(e){showErr('login-err',' '+(e.message||'auth failed'));}
 }
 async function register(){
   hideErr('reg-err');

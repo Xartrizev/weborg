@@ -471,6 +471,7 @@ body::before {
     <div class="brand">
       <div class="brand-icon">💬</div>
       <div class="brand-name">Zrypt Chat</div>
+		<button class="sb-btn" id="install-btn" style="display:none" onclick="installApp()">Install App</button>
     </div>
 
     <div id="login-view">
@@ -706,6 +707,36 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <script>
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $('install-btn').style.display = 'block';
+});
+
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((result) => {
+    deferredPrompt = null;
+    $('install-btn').style.display = 'none';
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  $('install-btn').style.display = 'none';
+  toast('App installed!');
+});
+
+	// Show iOS install hint
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches;
+
+if (isIOS && !isInStandaloneMode) {
+  toast('To install: tap Share → Add to Home Screen');
+}
+	
 // ══════════════════════════════════════════════════════════
 //  SUPABASE CONFIG — replace with your project credentials
 //  Dashboard → Project Settings → API

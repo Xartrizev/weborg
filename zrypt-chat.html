@@ -1222,5 +1222,10 @@ window.addEventListener('resize',()=>{
   if(!isMobile()){document.querySelector('.sidebar').classList.remove('slide-out');document.querySelector('.main').classList.remove('slide-in');}
 });
 </script>
+	<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
 </body>
 </html>

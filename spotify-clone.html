@@ -552,9 +552,10 @@ async function loadPlaylist(id) {
   $('playlist-tracks').innerHTML='<div class="spinner"></div>';
   const [pl,tracks]=await Promise.all([
     api(`/playlists/${id}`),
-    api(`/playlists/${id}/tracks?limit=50&fields=items(track(id,name,uri,duration_ms,artists,album(name,images)))`)
+    api(`/playlists/${id}/tracks?limit=50`)
   ]);
-  if (!pl) return;
+  if (!pl) { $('playlist-tracks').innerHTML='<p style="color:var(--text2);padding:20px">Failed to load playlist.</p>'; return; }
+  if (!tracks) { $('playlist-tracks').innerHTML='<p style="color:var(--text2);padding:20px">Failed to load tracks.</p>'; return; }
   $('pl-art').src=imgOr(pl.images?.[0]?.url);
   $('pl-name').textContent=pl.name;
   $('pl-type').textContent=(pl.type||'playlist').toUpperCase();

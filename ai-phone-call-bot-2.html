@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full-Duplex AI — Voice Perception</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg:      #07090f;
+            --surface: #0d1117;
+            --card:    #111620;
+            --border:  #1c2333;
+            --accent:  #00e5ff;
+            --purple:  #7c3aed;
+            --green:   #00ff88;
+            --red:     #ff3355;
+            --orange:  #ff9500;
+            --yellow:  #ffd60a;
+            --text:    #e2e8f0;
+            --muted:   #4a5568;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 16px;
+        }
+
+        h1 {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-align: center;
+        }
+
+        .subtitle { font-size: 12px; color: var(--muted); text-align: center; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+            max-width: 960px;
+        }
+
+        .col { display: flex; flex-direction: column; gap: 14px; }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .panel-head {
+            padding: 10px 16px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-body { padding: 14px 16px; }
+
+        /* Caller */
+        .caller {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+        }
+
+        .avatar {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; flex-shrink: 0; position: relative;
+        }
+
+        .avatar-ring {
+            position: absolute; inset: -5px; border-radius: 50%;
+            border: 2px solid var(--accent);
+            opacity: 0; animation: ring 2s infinite;
+        }
+
+        @keyframes ring {
+            0%   { opacity: 0.7; transform: scale(1); }
+            100% { opacity: 0;   transform: scale(1.5); }
+        }
+
+        .avatar-ring.on { opacity: 0.7; }
+
+        .caller-info { flex: 1; }
+        .caller-name { font-size: 18px; font-weight: 600; }
+
+        .state-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; margin-top: 4px;
+        }
+
+        .state-pill.listening { background: rgba(0,255,136,.15); color: var(--green); }
+        .state-pill.speaking  { background: rgba(0,229,255,.15); color: var(--accent); }
+        .state-pill.idle      { background: rgba(74,85,104,.15);  color: var(--muted); }
+
+        .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+        /* Waveforms */
+        canvas { width: 100%; display: block; border-radius: 8px; background: var(--card); }
+
+        .wave-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .wave-box { position: relative; }
+        .wave-label { font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+
+        /* Pitch display */
+        .pitch-display {
+            text-align: center; padding: 12px 0;
+        }
+
+        .pitch-hz {
+            font-size: 48px; font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(0,229,255,.4);
+            line-height: 1;
+        }
+
+        .pitch-note {
+            font-size: 22px; color: var(--text);
+            margin-top: 4px; font-weight: 600;
+        }
+
+        .pitch-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+        .pitch-bar-wrap {
+            margin-top: 10px;
+            height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;
+        }
+
+        .pitch-bar { height: 100%; border-radius: 4px; transition: width .08s, background .3s; }
+
+        /* Feature grid */
+        .feat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .feat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .feat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
+        .feat-value { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
+        .feat-sub   { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+        .feat-bar-wrap { margin-top: 6px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .feat-bar { height: 100%; border-radius: 2px; transition: width .1s; }
+
+        /* Emotion */
+        .emotion-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+        .emotion-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 10px;
+            text-align: center;
+            transition: border-color .2s;
+        }
+
+        .emotion-card.active { border-color: var(--accent); }
+
+        .emotion-icon { font-size: 20px; margin-bottom: 4px; }
+        .emotion-name { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+        .emotion-pct  { font-size: 16px; font-weight: 700; color: var(--text); }
+
+        /* Voice profile */
+        .profile-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 7px 0; border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .profile-row:last-child { border-bottom: none; }
+        .profile-key { color: var(--muted); }
+        .profile-val { font-weight: 600; color: var(--text); }
+
+        /* Spectrogram */
+        #spectrogramCanvas { height: 90px !important; }
+
+        /* Conversation */
+        .convo { height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+        .msg { display: flex; gap: 8px; animation: fadeUp .2s ease; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+        .msg.user { flex-direction: row-reverse; }
+
+        .msg-av {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; flex-shrink: 0;
+        }
+
+        .msg.bot  .msg-av { background: rgba(0,229,255,.15); }
+        .msg.user .msg-av { background: rgba(124,58,237,.2); }
+
+        .msg-bub {
+            max-width: 80%; padding: 7px 11px; border-radius: 12px;
+            font-size: 12px; line-height: 1.5;
+        }
+
+        .msg.bot  .msg-bub { background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.15); }
+        .msg.user .msg-bub { background: rgba(124,58,237,.2); border: 1px solid rgba(124,58,237,.3); color: #c4b5fd; border-bottom-right-radius: 3px; }
+        .msg.bot  .msg-bub { border-bottom-left-radius: 3px; }
+
+        /* Live transcript */
+        .transcript {
+            padding: 8px 12px; background: var(--card);
+            border-top: 1px solid var(--border);
+            font-size: 12px; color: var(--muted); font-style: italic;
+            min-height: 34px;
+        }
+
+        .transcript.on { color: var(--text); }
+
+        /* Controls */
+        .controls {
+            display: flex; justify-content: center; align-items: center; gap: 18px;
+            padding: 14px 20px; background: var(--card);
+            border-top: 1px solid var(--border);
+        }
+
+        .ctrl { width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; background: var(--border); color: var(--text); transition: all .2s; }
+        .ctrl:hover { filter: brightness(1.3); }
+        .ctrl.on { background: rgba(255,51,85,.2); color: var(--red); }
+
+        .call-btn { width: 62px; height: 62px; border-radius: 50%; border: none; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+        .call-btn:hover { transform: scale(1.08); }
+        .call-btn.start { background: var(--green); box-shadow: 0 0 25px rgba(0,255,136,.4); }
+        .call-btn.end   { background: var(--red);   box-shadow: 0 0 25px rgba(255,51,85,.4); }
+
+        /* Binary */
+        .bin-row { padding: 6px 14px; font-family: monospace; font-size: 9px; color: var(--muted); background: var(--bg); border-top: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        @media (max-width: 600px) {
+            .layout { grid-template-columns: 1fr; }
+            .feat-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Full-Duplex AI — Voice Perception</h1>
+<p class="subtitle">Pitch · Emotion · Tone · Energy · Timbre · ZCR · Spectral features — all live</p>
+
+<div class="layout">
+
+    <!-- LEFT COLUMN -->
+    <div class="col">
+
+        <!-- Caller panel -->
+        <div class="panel">
+            <div class="caller">
+                <div class="avatar">🤖<div class="avatar-ring" id="ring"></div></div>
+                <div class="caller-info">
+                    <div class="caller-name">AI Assistant</div>
+                    <div class="state-pill idle" id="statePill"><div class="dot"></div><span id="stateText">Ready</span></div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="ctrl" id="muteBtn" title="Mute">🎤</button>
+                <button class="call-btn start" id="callBtn">📞</button>
+                <button class="ctrl" id="volBtn" title="Speaker">🔊</button>
+            </div>
+        </div>
+
+        <!-- Waveforms -->
+        <div class="panel">
+            <div class="panel-head"><span>Live Waveforms</span><span id="duplexBadge" style="color:var(--muted)">DUPLEX OFF</span></div>
+            <div class="panel-body">
+                <div class="wave-row">
+                    <div class="wave-box">
+                        <div class="wave-label">🎤 Mic Input</div>
+                        <canvas id="micCanvas" height="55"></canvas>
+                    </div>
+                    <div class="wave-box">
+                        <div class="wave-label">🔊 AI Output</div>
+                        <canvas id="spkCanvas" height="55"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spectrogram -->
+        <div class="panel">
+            <div class="panel-head">Frequency Spectrogram</div>
+            <div class="panel-body" style="padding: 10px 14px;">
+                <canvas id="spectrogramCanvas" height="90"></canvas>
+            </div>
+        </div>
+
+        <!-- Pitch -->
+        <div class="panel">
+            <div class="panel-head">Pitch Detection (Autocorrelation)</div>
+            <div class="panel-body">
+                <div class="pitch-display">
+                    <div class="pitch-hz" id="pitchHz">—</div>
+                    <div class="pitch-note" id="pitchNote">—</div>
+                    <div class="pitch-label">Fundamental Frequency</div>
+                    <div class="pitch-bar-wrap">
+                        <div class="pitch-bar" id="pitchBar" style="width:0%;background:var(--accent)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation -->
+        <div class="panel">
+            <div class="panel-head">Conversation</div>
+            <div class="panel-body" style="padding: 10px 12px;">
+                <div class="convo" id="convo"></div>
+            </div>
+            <div class="transcript" id="transcript">Transcript will appear here...</div>
+            <div class="bin-row" id="binRow">MIC RAW: [waiting...]</div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col">
+
+        <!-- Emotion perception -->
+        <div class="panel">
+            <div class="panel-head">Emotion Perception</div>
+            <div class="panel-body">
+                <div class="emotion-grid" id="emotionGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Core voice features -->
+        <div class="panel">
+            <div class="panel-head">Voice Features</div>
+            <div class="panel-body">
+                <div class="feat-grid">
+                    <div class="feat-card">
+                        <div class="feat-label">Volume (RMS)</div>
+                        <div class="feat-value" id="fRms">0.000</div>
+                        <div class="feat-sub" id="fDb">— dB</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bRms" style="background:var(--green);width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Zero Cross Rate</div>
+                        <div class="feat-value" id="fZcr">0.000</div>
+                        <div class="feat-sub">Voiced / Unvoiced</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bZcr" style="background:var(--yellow);width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Spectral Centroid</div>
+                        <div class="feat-value" id="fCentroid">0</div>
+                        <div class="feat-sub">Hz — Brightness</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bCentroid" style="background:var(--accent);width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Spectral Rolloff</div>
+                        <div class="feat-value" id="fRolloff">0</div>
+                        <div class="feat-sub">Hz — High Freq</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bRolloff" style="background:var(--purple);width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Spectral Flux</div>
+                        <div class="feat-value" id="fFlux">0.00</div>
+                        <div class="feat-sub">Rate of Change</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bFlux" style="background:var(--orange);width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Energy</div>
+                        <div class="feat-value" id="fEnergy">0.00</div>
+                        <div class="feat-sub">Signal Power</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bEnergy" style="background:var(--red);width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Low Band</div>
+                        <div class="feat-value" id="fLow">0</div>
+                        <div class="feat-sub">0 – 500 Hz</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bLow" style="background:#4ade80;width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Mid Band</div>
+                        <div class="feat-value" id="fMid">0</div>
+                        <div class="feat-sub">500 – 4000 Hz</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bMid" style="background:#60a5fa;width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">High Band</div>
+                        <div class="feat-value" id="fHigh">0</div>
+                        <div class="feat-sub">4000 Hz+</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bHigh" style="background:#f472b6;width:0%"></div></div>
+                    </div>
+                    <div class="feat-card">
+                        <div class="feat-label">Entropy</div>
+                        <div class="feat-value" id="fEntropy">0.00</div>
+                        <div class="feat-sub">Randomness</div>
+                        <div class="feat-bar-wrap"><div class="feat-bar" id="bEntropy" style="background:#a78bfa;width:0%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice profile -->
+        <div class="panel">
+            <div class="panel-head">Voice Profile (Inferred)</div>
+            <div class="panel-body">
+                <div class="profile-row"><span class="profile-key">Estimated Gender</span><span class="profile-val" id="pGender">—</span></div>
+                <div class="profile-row"><span class="profile-key">Estimated Age Range</span><span class="profile-val" id="pAge">—</span></div>
+                <div class="profile-row"><span class="profile-key">Voice Type</span><span class="profile-val" id="pType">—</span></div>
+                <div class="profile-row"><span class="profile-key">Speaking Rate</span><span class="profile-val" id="pRate">—</span></div>
+                <div class="profile-row"><span class="profile-key">Breathiness</span><span class="profile-val" id="pBreath">—</span></div>
+                <div class="profile-row"><span class="profile-key">Nasality</span><span class="profile-val" id="pNasal">—</span></div>
+                <div class="profile-row"><span class="profile-key">Voice Clarity</span><span class="profile-val" id="pClarity">—</span></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ─── EMOTIONS ────────────────────────────────────────────────────────
+const EMOTIONS = [
+    { name: 'Calm',      icon: '😌', color: '#60a5fa' },
+    { name: 'Happy',     icon: '😄', color: '#ffd60a' },
+    { name: 'Excited',   icon: '🤩', color: '#ff9500' },
+    { name: 'Sad',       icon: '😢', color: '#818cf8' },
+    { name: 'Angry',     icon: '😠', color: '#ff3355' },
+    { name: 'Nervous',   icon: '😰', color: '#34d399' },
+];
+
+// Build emotion grid
+const emotionGrid = document.getElementById('emotionGrid');
+EMOTIONS.forEach(e => {
+    const card = document.createElement('div');
+    card.className = 'emotion-card';
+    card.id = `emo-${e.name}`;
+    card.innerHTML = `<div class="emotion-icon">${e.icon}</div><div class="emotion-name">${e.name}</div><div class="emotion-pct" id="epct-${e.name}">0%</div>`;
+    emotionGrid.appendChild(card);
+});
+
+// ─── STATE ───────────────────────────────────────────────────────────
+let isActive = false, isMuted = false, isSpeakerOff = false;
+let isSpeaking = false, pendingQueue = [];
+let lastBotText = '';
+let animId, recognition;
+let voices = [], selectedVoice = null;
+let prevSpectrum = null;
+
+// ─── AUDIO ───────────────────────────────────────────────────────────
+let micAudioCtx, micAnalyser, micSource;
+
+// ─── CANVAS ──────────────────────────────────────────────────────────
+const micCanvas  = document.getElementById('micCanvas');
+const spkCanvas  = document.getElementById('spkCanvas');
+const spectCanvas = document.getElementById('spectrogramCanvas');
+const micCtx2    = micCanvas.getContext('2d');
+const spkCtx2    = spkCanvas.getContext('2d');
+const spectCtx   = spectCanvas.getContext('2d');
+
+// Scrolling spectrogram column tracker
+let spectX = 0;
+
+// ─── NOTES ───────────────────────────────────────────────────────────
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function freqToNote(freq) {
+    if (freq <= 0) return '—';
+    const n = Math.round(12 * Math.log2(freq / 440)) + 69;
+    const note = NOTE_NAMES[n % 12];
+    const octave = Math.floor(n / 12) - 1;
+    return `${note}${octave}`;
+}
+
+// ─── PITCH (Autocorrelation) ─────────────────────────────────────────
+function detectPitch(buffer, sampleRate) {
+    const SIZE = buffer.length;
+    const MAX_SAMPLES = Math.floor(SIZE / 2);
+    const corr = new Float32Array(MAX_SAMPLES);
+    let foundGoodCorr = false, lastCorr = 1;
+    const THRESHOLD = 0.2;
+    let shift = 0;
+
+    for (let i = 0; i < MAX_SAMPLES; i++) {
+        let sum = 0;
+        for (let q = 0; q < MAX_SAMPLES; q++) {
+            sum += ((buffer[q] - 128) / 128) * ((buffer[q + i] - 128) / 128);
+        }
+        corr[i] = sum;
+    }
+
+    for (let i = 1; i < MAX_SAMPLES; i++) {
+        if (corr[i] > THRESHOLD) { foundGoodCorr = true; }
+        if (foundGoodCorr && corr[i] > lastCorr) { shift = i - 1; break; }
+        lastCorr = corr[i];
+    }
+
+    if (!shift || !foundGoodCorr) return -1;
+
+    let peak = shift, maxV = -Infinity;
+    for (let i = shift - 1; i <= shift + 1 && i < MAX_SAMPLES; i++) {
+        if (corr[i] > maxV) { maxV = corr[i]; peak = i; }
+    }
+
+    return sampleRate / peak;
+}
+
+// ─── FEATURE EXTRACTION ──────────────────────────────────────────────
+function extractFeatures(timeBuf, freqBuf, sampleRate) {
+    const n = timeBuf.length;
+    const fn = freqBuf.length;
+    const nyquist = sampleRate / 2;
+
+    // RMS
+    let sum = 0;
+    for (let i = 0; i < n; i++) sum += ((timeBuf[i] - 128) / 128) ** 2;
+    const rms = Math.sqrt(sum / n);
+    const db = rms > 0 ? 20 * Math.log10(rms) : -100;
+
+    // ZCR
+    let zcr = 0;
+    for (let i = 1; i < n; i++) {
+        const a = timeBuf[i] - 128, b = timeBuf[i-1] - 128;
+        if ((a >= 0 && b < 0) || (a < 0 && b >= 0)) zcr++;
+    }
+    zcr /= n;
+
+    // Spectral centroid
+    let ws = 0, s = 0;
+    for (let i = 0; i < fn; i++) { ws += (i / fn * nyquist) * freqBuf[i]; s += freqBuf[i]; }
+    const centroid = s > 0 ? ws / s : 0;
+
+    // Spectral rolloff
+    const total = s * 0.85;
+    let cum = 0, rolloff = 0;
+    for (let i = 0; i < fn; i++) { cum += freqBuf[i]; if (cum >= total) { rolloff = i / fn * nyquist; break; } }
+
+    // Spectral flux
+    let flux = 0;
+    if (prevSpectrum) {
+        for (let i = 0; i < fn; i++) { const d = freqBuf[i] - prevSpectrum[i]; flux += d * d; }
+        flux = Math.sqrt(flux) / fn;
+    }
+    prevSpectrum = new Uint8Array(freqBuf);
+
+    // Energy
+    let energy = 0;
+    for (let i = 0; i < n; i++) energy += ((timeBuf[i] - 128) / 128) ** 2;
+
+    // Band energy
+    const binHz = nyquist / fn;
+    const lowEnd   = Math.floor(500   / binHz);
+    const midEnd   = Math.floor(4000  / binHz);
+
+    let low = 0, mid = 0, high = 0;
+    for (let i = 0; i < fn; i++) {
+        if (i < lowEnd) low += freqBuf[i];
+        else if (i < midEnd) mid += freqBuf[i];
+        else high += freqBuf[i];
+    }
+    low  /= Math.max(1, lowEnd);
+    mid  /= Math.max(1, midEnd - lowEnd);
+    high /= Math.max(1, fn - midEnd);
+
+    // Entropy
+    let hist = new Array(32).fill(0);
+    for (let i = 0; i < n; i++) { hist[Math.floor((timeBuf[i] / 255) * 31)]++; }
+    let entropy = 0;
+    for (let h of hist) { if (h > 0) { const p = h / n; entropy -= p * Math.log2(p); } }
+    entropy /= Math.log2(32); // normalise 0-1
+
+    // Pitch
+    const pitch = detectPitch(timeBuf, sampleRate);
+
+    return { rms, db, zcr, centroid, rolloff, flux, energy, low, mid, high, entropy, pitch };
+}
+
+// ─── EMOTION INFERENCE (rule-based if-else on features) ──────────────
+function inferEmotion(f) {
+    const scores = { Calm: 0, Happy: 0, Excited: 0, Sad: 0, Angry: 0, Nervous: 0 };
+
+    // Calm: low energy, low pitch, low ZCR
+    if (f.rms < 0.15 && f.zcr < 0.05 && f.pitch > 80 && f.pitch < 180) scores.Calm += 40;
+    if (f.flux < 0.5) scores.Calm += 20;
+    if (f.entropy < 0.5) scores.Calm += 20;
+
+    // Happy: medium-high pitch, medium energy, high centroid
+    if (f.pitch > 180 && f.pitch < 320) scores.Happy += 35;
+    if (f.centroid > 1500) scores.Happy += 25;
+    if (f.rms > 0.1 && f.rms < 0.4) scores.Happy += 20;
+
+    // Excited: high pitch, high energy, high ZCR, high flux
+    if (f.pitch > 280) scores.Excited += 30;
+    if (f.rms > 0.4) scores.Excited += 30;
+    if (f.flux > 2) scores.Excited += 25;
+    if (f.zcr > 0.15) scores.Excited += 15;
+
+    // Sad: low pitch, low energy, low centroid
+    if (f.pitch > 60 && f.pitch < 150) scores.Sad += 25;
+    if (f.rms < 0.1) scores.Sad += 30;
+    if (f.centroid < 1000) scores.Sad += 25;
+    if (f.zcr < 0.03) scores.Sad += 20;
+
+    // Angry: high energy, high flux, mid-low pitch
+    if (f.rms > 0.5) scores.Angry += 40;
+    if (f.flux > 3) scores.Angry += 30;
+    if (f.pitch > 100 && f.pitch < 220) scores.Angry += 20;
+    if (f.entropy > 0.7) scores.Angry += 10;
+
+    // Nervous: high ZCR, irregular flux, high-ish pitch
+    if (f.zcr > 0.12) scores.Nervous += 30;
+    if (f.flux > 1 && f.flux < 3) scores.Nervous += 25;
+    if (f.pitch > 200 && f.pitch < 350) scores.Nervous += 25;
+    if (f.entropy > 0.5) scores.Nervous += 20;
+
+    // Normalise
+    const total = Object.values(scores).reduce((a, b) => a + b, 0) || 1;
+    for (const k in scores) scores[k] = Math.round(scores[k] / total * 100);
+
+    return scores;
+}
+
+// ─── VOICE PROFILE ───────────────────────────────────────────────────
+function inferProfile(f) {
+    let gender = '—', age = '—', type = '—', rate = '—', breath = '—', nasal = '—', clarity = '—';
+
+    if (f.pitch > 0) {
+        // Gender estimation from pitch
+        if (f.pitch < 165) gender = '♂ Male';
+        else if (f.pitch > 200) gender = '♀ Female';
+        else gender = '⚥ Androgynous';
+
+        // Age estimate
+        if (f.pitch > 300) age = 'Child (< 12)';
+        else if (f.pitch > 220) age = 'Teen / Young Adult';
+        else if (f.pitch > 150) age = 'Adult (25–50)';
+        else age = 'Mature / Senior (50+)';
+
+        // Voice type
+        if (f.pitch < 110) type = 'Bass';
+        else if (f.pitch < 155) type = 'Baritone / Contralto';
+        else if (f.pitch < 210) type = 'Tenor / Mezzo-Soprano';
+        else if (f.pitch < 280) type = 'Alto / Soprano';
+        else type = 'Soprano / Falsetto';
+    }
+
+    // Speaking rate from ZCR
+    if (f.zcr < 0.03) rate = 'Slow';
+    else if (f.zcr < 0.08) rate = 'Normal';
+    else if (f.zcr < 0.15) rate = 'Fast';
+    else rate = 'Very Fast';
+
+    // Breathiness from high freq energy + low rms
+    const breathScore = f.high / (f.rms + 0.001);
+    if (breathScore > 300) breath = 'Very Breathy';
+    else if (breathScore > 150) breath = 'Breathy';
+    else if (breathScore > 60) breath = 'Moderate';
+    else breath = 'Clear';
+
+    // Nasality: mid band dominance
+    const nasalScore = f.mid / (f.low + f.high + 0.001);
+    if (nasalScore > 2) nasal = 'High';
+    else if (nasalScore > 1.2) nasal = 'Moderate';
+    else nasal = 'Low';
+
+    // Clarity: inverse of entropy
+    if (f.entropy < 0.3) clarity = '⭐⭐⭐ Excellent';
+    else if (f.entropy < 0.5) clarity = '⭐⭐ Good';
+    else if (f.entropy < 0.7) clarity = '⭐ Fair';
+    else clarity = 'Noisy';
+
+    return { gender, age, type, rate, breath, nasal, clarity };
+}
+
+// ─── DRAWING ─────────────────────────────────────────────────────────
+function drawWave(ctx, canvas, data, color) {
+    const w = canvas.offsetWidth || 200;
+    const h = canvas.offsetHeight || 55;
+    canvas.width = w * devicePixelRatio;
+    canvas.height = h * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    ctx.fillStyle = '#131b28';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const step = w / data.length;
+    for (let i = 0; i < data.length; i++) {
+        const y = ((data[i] - 128) / 128) * (h * 0.45) + h / 2;
+        i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * step, y);
+    }
+    ctx.stroke();
+}
+
+let synthPhase = 0;
+function drawSynthWave(ctx, canvas) {
+    const w = canvas.offsetWidth || 200;
+    const h = canvas.offsetHeight || 55;
+    canvas.width = w * devicePixelRatio;
+    canvas.height = h * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    ctx.fillStyle = '#131b28';
+    ctx.fillRect(0, 0, w, h);
+    synthPhase += 0.12;
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let x = 0; x < w; x++) {
+        const y = h / 2 + (Math.sin((x / w) * Math.PI * 8 + synthPhase) * 0.6 + Math.sin((x / w) * Math.PI * 14 + synthPhase * 1.4) * 0.25) * h * 0.38;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+}
+
+function drawSpectrogram(freqBuf) {
+    const w = spectCanvas.offsetWidth || 400;
+    const h = spectCanvas.offsetHeight || 90;
+    spectCanvas.width = w * devicePixelRatio;
+    spectCanvas.height = h * devicePixelRatio;
+    spectCtx.scale(devicePixelRatio, devicePixelRatio);
+
+    // Shift left by 1 pixel
+    const imgData = spectCtx.getImageData(devicePixelRatio, 0, (w - 1) * devicePixelRatio, h * devicePixelRatio);
+    spectCtx.putImageData(imgData, 0, 0);
+
+    // Draw new column on right
+    const colX = w - 1;
+    for (let i = 0; i < freqBuf.length && i < h; i++) {
+        const v = freqBuf[freqBuf.length - 1 - i] / 255;
+        const r = Math.floor(v * 80);
+        const g = Math.floor(v * 200);
+        const b = Math.floor(v * 255);
+        spectCtx.fillStyle = `rgb(${r},${g},${b})`;
+        spectCtx.fillRect(colX, i * (h / freqBuf.length), 1, Math.ceil(h / freqBuf.length));
+    }
+}
+
+// ─── UPDATE UI ───────────────────────────────────────────────────────
+function updateUI(f) {
+    // Features
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const bar = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = Math.min(100, Math.max(0, pct)) + '%'; };
+
+    set('fRms',    f.rms.toFixed(3));
+    set('fDb',     f.db.toFixed(1) + ' dB');
+    bar('bRms',    f.rms * 200);
+
+    set('fZcr',    f.zcr.toFixed(3));
+    bar('bZcr',    f.zcr * 500);
+
+    set('fCentroid', Math.round(f.centroid) + ' Hz');
+    bar('bCentroid', f.centroid / 80);
+
+    set('fRolloff', Math.round(f.rolloff) + ' Hz');
+    bar('bRolloff', f.rolloff / 80);
+
+    set('fFlux',   f.flux.toFixed(2));
+    bar('bFlux',   f.flux * 10);
+
+    set('fEnergy', f.energy.toFixed(2));
+    bar('bEnergy', f.energy * 2);
+
+    set('fLow',  Math.round(f.low));
+    bar('bLow',  f.low / 2.55);
+
+    set('fMid',  Math.round(f.mid));
+    bar('bMid',  f.mid / 2.55);
+
+    set('fHigh', Math.round(f.high));
+    bar('bHigh', f.high / 2.55);
+
+    set('fEntropy', f.entropy.toFixed(2));
+    bar('bEntropy', f.entropy * 100);
+
+    // Pitch
+    if (f.pitch > 50 && f.pitch < 1500) {
+        set('pitchHz',  Math.round(f.pitch) + ' Hz');
+        set('pitchNote', freqToNote(f.pitch));
+        const pct = Math.min(100, (f.pitch - 50) / 1450 * 100);
+        document.getElementById('pitchBar').style.width = pct + '%';
+        const hue = Math.floor(pct * 2.4);
+        document.getElementById('pitchBar').style.background = `hsl(${hue}, 100%, 55%)`;
+    } else {
+        set('pitchHz', '—');
+        set('pitchNote', 'No pitch');
+        document.getElementById('pitchBar').style.width = '0%';
+    }
+
+    // Emotion
+    const emotions = inferEmotion(f);
+    const maxEmo = Object.entries(emotions).sort((a,b)=>b[1]-a[1])[0][0];
+    EMOTIONS.forEach(e => {
+        const card = document.getElementById(`emo-${e.name}`);
+        const pct  = document.getElementById(`epct-${e.name}`);
+        if (card) card.classList.toggle('active', e.name === maxEmo);
+        if (pct)  pct.textContent = emotions[e.name] + '%';
+    });
+
+    // Voice profile
+    const profile = inferProfile(f);
+    set('pGender',  profile.gender);
+    set('pAge',     profile.age);
+    set('pType',    profile.type);
+    set('pRate',    profile.rate);
+    set('pBreath',  profile.breath);
+    set('pNasal',   profile.nasal);
+    set('pClarity', profile.clarity);
+}
+
+// ─── MAIN LOOP ───────────────────────────────────────────────────────
+function visualLoop() {
+    if (!isActive) return;
+    animId = requestAnimationFrame(visualLoop);
+    if (!micAnalyser) return;
+
+    const tBuf = new Uint8Array(micAnalyser.frequencyBinCount);
+    const fBuf = new Uint8Array(micAnalyser.frequencyBinCount);
+    micAnalyser.getByteTimeDomainData(tBuf);
+    micAnalyser.getByteFrequencyData(fBuf);
+
+    drawWave(micCtx2, micCanvas, tBuf, isMuted ? '#4a5568' : '#00ff88');
+    drawSpectrogram(fBuf);
+
+    if (isSpeaking) drawSynthWave(spkCtx2, spkCanvas);
+    else {
+        spkCtx2.fillStyle = '#131b28';
+        spkCtx2.fillRect(0, 0, spkCanvas.width, spkCanvas.height);
+        spkCtx2.strokeStyle = '#1c2333';
+        spkCtx2.lineWidth = 1;
+        spkCtx2.beginPath();
+        spkCtx2.moveTo(0, spkCanvas.height / 2 / devicePixelRatio);
+        spkCtx2.lineTo(spkCanvas.width, spkCanvas.height / 2 / devicePixelRatio);
+        spkCtx2.stroke();
+    }
+
+    const features = extractFeatures(tBuf, fBuf, micAudioCtx.sampleRate);
+    updateUI(features);
+
+    // Binary readout
+    const hex = Array.from(tBuf.slice(0, 20)).map(b => b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+    document.getElementById('binRow').textContent = `MIC RAW: ${hex}...`;
+}
+
+// ─── SPEECH ──────────────────────────────────────────────────────────
+function loadVoices() {
+    voices = speechSynthesis.getVoices();
+    selectedVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google'))
+                 || voices.find(v => v.lang.startsWith('en'))
+                 || voices[0];
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+function speak(text) {
+    return new Promise(resolve => {
+        if (isSpeaking) { pendingQueue.push({text, resolve}); return; }
+        isSpeaking = true; lastBotText = text;
+        setState('speaking');
+        const u = new SpeechSynthesisUtterance(text);
+        u.voice = selectedVoice; u.rate = 1; u.pitch = 1; u.volume = isSpeakerOff ? 0 : 1;
+        u.onend = () => {
+            isSpeaking = false; setState('listening');
+            if (pendingQueue.length > 0) { const n = pendingQueue.shift(); speak(n.text).then(n.resolve); }
+            resolve();
+        };
+        u.onerror = () => { isSpeaking = false; resolve(); };
+        speechSynthesis.speak(u);
+        if (isSpeaking) requestAnimationFrame(function loop() { if (isSpeaking) { drawSynthWave(spkCtx2, spkCanvas); requestAnimationFrame(loop); } });
+    });
+}
+
+// ─── RECOGNITION ─────────────────────────────────────────────────────
+const RESPONSES = {
+    greet:   { k:['hello','hi','hey'], r:['Hello! I can hear you — and I\'m already analysing your voice features in real-time.',
+                                           'Hi! Check the emotion panel — I can already infer how you\'re feeling from your voice.'] },
+    pitch:   { k:['pitch','note','frequency'], r:['Your pitch is shown live in Hz and musical note on the left. I use autocorrelation on raw audio bytes to detect it.'] },
+    emotion: { k:['emotion','feeling','mood'], r:['I detect emotion from combinations of pitch, energy, ZCR, and spectral flux — all computed from raw audio bytes every frame.'] },
+    gender:  { k:['gender','male','female'], r:['I estimate gender from fundamental frequency. Below 165Hz suggests male, above 200Hz suggests female — though this is a broad heuristic.'] },
+    stop:    { k:['stop','quiet','pause','enough'], r:null },
+    bye:     { k:['bye','goodbye','end call'], r:['Goodbye! Your voice features were very interesting to analyse.'] },
+};
+
+function getResponse(input) {
+    const t = input.toLowerCase();
+    for (const [, {k, r}] of Object.entries(RESPONSES)) {
+        if (k && k.some(kw => t.includes(kw))) return r ? r[Math.floor(Math.random() * r.length)] : null;
+    }
+    const d = [
+        'I\'m reading your raw audio bytes right now — pitch, emotion, breathiness, all of it.',
+        'Notice how your emotion scores change as your tone shifts.',
+        'Your voice features update 60 times per second from raw PCM bytes.',
+        'Try speaking loudly then quietly — watch the energy and RMS change.',
+        'Try a high pitch then low — watch the pitch detector and voice profile update.',
+    ];
+    return d[Math.floor(Math.random() * d.length)];
+}
+
+function setupRecognition() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = async e => {
+        let interim = '', final = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+            const t = e.results[i][0].transcript;
+            e.results[i].isFinal ? (final += t) : (interim += t);
+        }
+        if (interim) { const el = document.getElementById('transcript'); el.textContent = '🎤 ' + interim; el.classList.add('on'); }
+        if (final.trim() && !isMuted) {
+            addMsg('user', final.trim());
+            document.getElementById('transcript').textContent = '✓ ' + final.trim();
+            const low = final.toLowerCase();
+            if (['stop','quiet','pause','enough'].some(w => low.includes(w))) { speechSynthesis.cancel(); pendingQueue = []; isSpeaking = false; }
+            const reply = getResponse(final.trim());
+            if (reply) { addMsg('bot', reply); speak(reply); }
+        }
+    };
+
+    recognition.onerror = e => { if (e.error !== 'no-speech') console.warn(e.error); };
+    recognition.onend = () => { if (isActive) { try { recognition.start(); } catch(_) {} } };
+    recognition.start();
+}
+
+// ─── CALL CONTROL ────────────────────────────────────────────────────
+document.getElementById('callBtn').addEventListener('click', async () => {
+    isActive ? endCall() : await startCall();
+});
+
+document.getElementById('muteBtn').addEventListener('click', () => {
+    isMuted = !isMuted;
+    document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🎤';
+    document.getElementById('muteBtn').classList.toggle('on', isMuted);
+});
+
+document.getElementById('volBtn').addEventListener('click', () => {
+    isSpeakerOff = !isSpeakerOff;
+    document.getElementById('volBtn').textContent = isSpeakerOff ? '🔕' : '🔊';
+});
+
+async function startCall() {
+    isActive = true;
+    const btn = document.getElementById('callBtn');
+    btn.className = 'call-btn end'; btn.textContent = '📵';
+    document.getElementById('ring').classList.add('on');
+    document.getElementById('duplexBadge').textContent = 'DUPLEX ON';
+    document.getElementById('duplexBadge').style.color = 'var(--green)';
+
+    micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    micAnalyser = micAudioCtx.createAnalyser();
+    micAnalyser.fftSize = 2048;
+    micAnalyser.smoothingTimeConstant = 0.6;
+    micSource = micAudioCtx.createMediaStreamSource(stream);
+    micSource.connect(micAnalyser);
+
+    setupRecognition();
+    visualLoop();
+    setState('listening');
+
+    addMsg('bot', 'Connected! Speak and watch your pitch, emotion, and voice profile update live from raw audio bytes.');
+    speak('Connected! I\'m now reading your voice in real time. I can perceive your pitch, emotion, energy, breathiness, and much more — all from raw audio bytes.');
+}
+
+function endCall() {
+    isActive = false; isSpeaking = false; pendingQueue = [];
+    if (recognition) { try { recognition.stop(); } catch(_) {} }
+    speechSynthesis.cancel();
+    if (micSource) micSource.disconnect();
+    if (micAudioCtx) micAudioCtx.close();
+    if (animId) cancelAnimationFrame(animId);
+    const btn = document.getElementById('callBtn');
+    btn.className = 'call-btn start'; btn.textContent = '📞';
+    document.getElementById('ring').classList.remove('on');
+    document.getElementById('duplexBadge').textContent = 'DUPLEX OFF';
+    document.getElementById('duplexBadge').style.color = 'var(--muted)';
+    setState('idle');
+}
+
+function setState(s) {
+    const pill = document.getElementById('statePill');
+    const txt  = document.getElementById('stateText');
+    pill.className = 'state-pill ' + s;
+    txt.textContent = s === 'listening' ? 'Listening' : s === 'speaking' ? 'Speaking + Listening' : 'Ready';
+}
+
+function addMsg(type, text) {
+    const c = document.getElementById('convo');
+    const d = document.createElement('div');
+    d.className = `msg ${type}`;
+    d.innerHTML = `<div class="msg-av">${type === 'user' ? '👤' : '🤖'}</div><div class="msg-bub">${text}</div>`;
+    c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+</script>
+</body>
+</html>

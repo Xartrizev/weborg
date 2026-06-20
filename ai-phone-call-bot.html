@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Phone Call Bot</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .phone {
+            width: 100%;
+            max-width: 420px;
+            background: #1a1a1a;
+            border-radius: 40px;
+            padding: 30px 20px;
+            box-shadow: 0 0 60px rgba(0, 255, 136, 0.3), 0 0 120px rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            position: relative;
+        }
+
+        .phone-top {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .speaker-grille {
+            width: 60px;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .screen {
+            background: #000;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 400px;
+            border: 1px solid #222;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .call-status {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .caller-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .call-timer {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .waveform-container {
+            background: #0d1117;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            height: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .conversation {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            max-height: 200px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.bot {
+            text-align: left;
+        }
+
+        .bubble {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 85%;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .user .bubble {
+            background: #00ff88;
+            color: #000;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot .bubble {
+            background: #1e1e1e;
+            color: #fff;
+            border: 1px solid #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-label {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .status-bar {
+            background: #0d1117;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #00ff88;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .recording-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #ff0000;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1s infinite;
+        }
+
+        .speaking-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .call-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: #222;
+            border: none;
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #fff;
+            font-size: 10px;
+            gap: 4px;
+        }
+
+        .control-btn:hover {
+            background: #333;
+            transform: scale(1.05);
+        }
+
+        .control-btn.active {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .control-btn .icon {
+            font-size: 22px;
+        }
+
+        .main-controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .end-call {
+            background: #ff3b30;
+            border: none;
+            border-radius: 50%;
+            width: 75px;
+            height: 75px;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .end-call:hover {
+            background: #ff6b6b;
+            transform: scale(1.05);
+        }
+
+        .start-call {
+            background: #00ff88;
+            border: none;
+            border-radius: 50%;
+            width: 75px;
+            height: 75px;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .start-call:hover {
+            background: #00cc6a;
+            transform: scale(1.05);
+        }
+
+        .mic-btn {
+            background: #222;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 26px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mic-btn.muted {
+            background: #ff3b30;
+        }
+
+        .synthesis-controls {
+            background: #0d1117;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .synthesis-controls h3 {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .slider-label {
+            font-size: 12px;
+            color: #888;
+            width: 60px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: #00ff88;
+        }
+
+        .slider-value {
+            font-size: 12px;
+            color: #00ff88;
+            width: 35px;
+            text-align: right;
+        }
+
+        .voice-select {
+            background: #1a1a1a;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 6px;
+            border-radius: 5px;
+            font-size: 12px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 2px;
+        }
+
+        .signal-bars {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+        }
+
+        .bar {
+            width: 4px;
+            background: #00ff88;
+            border-radius: 2px;
+        }
+
+        .binary-display {
+            background: #0a0a0a;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 10px;
+            color: #00ff88;
+            font-family: monospace;
+            max-height: 60px;
+            overflow: hidden;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <!-- Signal bars -->
+        <div class="signal-bars">
+            <div class="bar" style="height: 6px;"></div>
+            <div class="bar" style="height: 10px;"></div>
+            <div class="bar" style="height: 14px;"></div>
+            <div class="bar" style="height: 18px;"></div>
+        </div>
+
+        <!-- Speaker grille -->
+        <div class="phone-top">
+            <div class="speaker-grille"></div>
+        </div>
+
+        <!-- Screen -->
+        <div class="screen">
+            <!-- Caller info -->
+            <div class="call-status">
+                <div class="caller-name">🤖 AI Assistant</div>
+                <div class="call-timer" id="callTimer">00:00</div>
+            </div>
+
+            <!-- Waveform -->
+            <div class="waveform-container">
+                <canvas id="waveformCanvas"></canvas>
+            </div>
+
+            <!-- Raw binary display -->
+            <div class="binary-display" id="binaryDisplay">
+                [No audio yet...]
+            </div>
+
+            <!-- Status -->
+            <div class="status-bar" id="statusBar">
+                Press call to start
+            </div>
+
+            <!-- Conversation -->
+            <div class="conversation" id="conversation"></div>
+        </div>
+
+        <!-- Voice synthesis controls -->
+        <div class="synthesis-controls">
+            <h3>🔊 Voice Synthesis Controls</h3>
+            <select class="voice-select" id="voiceSelect">
+                <option>Loading voices...</option>
+            </select>
+            <div class="slider-row">
+                <span class="slider-label">Pitch</span>
+                <input type="range" id="pitchSlider" min="0.1" max="2" step="0.1" value="1">
+                <span class="slider-value" id="pitchValue">1.0</span>
+            </div>
+            <div class="slider-row">
+                <span class="slider-label">Speed</span>
+                <input type="range" id="speedSlider" min="0.1" max="2" step="0.1" value="1">
+                <span class="slider-value" id="speedValue">1.0</span>
+            </div>
+            <div class="slider-row">
+                <span class="slider-label">Volume</span>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
+                <span class="slider-value" id="volumeValue">1.0</span>
+            </div>
+        </div>
+
+        <!-- Call controls -->
+        <div class="call-controls">
+            <button class="control-btn" id="muteBtn">
+                <span class="icon">🎤</span>
+                <span>Mute</span>
+            </button>
+            <button class="control-btn" id="speakerBtn">
+                <span class="icon">🔊</span>
+                <span>Speaker</span>
+            </button>
+            <button class="control-btn" id="holdBtn">
+                <span class="icon">⏸️</span>
+                <span>Hold</span>
+            </button>
+        </div>
+
+        <!-- Main controls -->
+        <div class="main-controls">
+            <button class="mic-btn" id="micBtn" style="display:none">🎤</button>
+            <button class="start-call" id="startCallBtn">📞</button>
+            <button class="end-call" id="endCallBtn" style="display:none">📵</button>
+        </div>
+    </div>
+
+    <script>
+        // Speech Synthesis Setup
+        let voices = [];
+        let currentVoice = null;
+        let pitch = 1.0;
+        let speed = 1.0;
+        let volume = 1.0;
+
+        // Call state
+        let isCallActive = false;
+        let isMuted = false;
+        let isListening = false;
+        let callStartTime = null;
+        let timerInterval = null;
+
+        // Audio
+        let audioContext;
+        let microphone;
+        let analyser;
+        let animationId;
+
+        // Canvas
+        const waveformCanvas = document.getElementById('waveformCanvas');
+        const waveformCtx = waveformCanvas.getContext('2d');
+
+        // Voice recognition
+        let recognition = null;
+
+        // AI responses
+        const aiResponses = {
+            greetings: ["hello", "hi", "hey", "good morning", "good afternoon"],
+            farewells: ["bye", "goodbye", "see you", "end call", "hang up"],
+            help: ["help", "assist", "support", "what can you do"],
+            time: ["time", "what time", "clock"],
+            weather: ["weather", "temperature", "rain", "sunny"],
+            name: ["your name", "who are you", "what are you"],
+            feeling: ["how are you", "feeling", "doing"],
+            yes: ["yes", "yeah", "yep", "correct", "right"],
+            no: ["no", "nope", "wrong", "incorrect"],
+            repeat: ["repeat", "say again", "pardon", "what"],
+        };
+
+        let lastResponse = "";
+
+        function getAIResponse(input) {
+            const lower = input.toLowerCase();
+
+            if (aiResponses.greetings.some(g => lower.includes(g))) {
+                return "Hello! Great to hear from you. How can I assist you today?";
+            }
+            if (aiResponses.farewells.some(f => lower.includes(f))) {
+                setTimeout(() => endCall(), 3000);
+                return "Goodbye! It was great talking with you. Have a wonderful day!";
+            }
+            if (aiResponses.help.some(h => lower.includes(h))) {
+                return "I can help you with many things! You can ask me about the time, weather, or just have a conversation. What would you like to know?";
+            }
+            if (aiResponses.time.some(t => lower.includes(t))) {
+                return `It is currently ${new Date().toLocaleTimeString()}.`;
+            }
+            if (aiResponses.weather.some(w => lower.includes(w))) {
+                return "I don't have access to live weather data, but I recommend checking your local weather app for accurate information!";
+            }
+            if (aiResponses.name.some(n => lower.includes(n))) {
+                return "I'm your AI voice assistant, built with speech synthesis and recognition technology. Nice to meet you!";
+            }
+            if (aiResponses.feeling.some(f => lower.includes(f))) {
+                return "I'm doing great, thank you for asking! I'm always ready to help. How are you feeling today?";
+            }
+            if (aiResponses.repeat.some(r => lower.includes(r))) {
+                return lastResponse || "I said: " + lastResponse;
+            }
+            if (aiResponses.yes.some(y => lower.includes(y))) {
+                return "Great! I'm glad we're on the same page. What else can I help you with?";
+            }
+            if (aiResponses.no.some(n => lower.includes(n))) {
+                return "I understand. Could you tell me more about what you're looking for?";
+            }
+
+            // Default intelligent-ish responses
+            const defaults = [
+                `I heard you say "${input}". That's interesting! Tell me more.`,
+                `You mentioned "${input}". Could you elaborate on that?`,
+                "That's a great point. What else is on your mind?",
+                "I understand. Is there anything specific I can help you with?",
+                "Interesting! Let me think about that. How can I assist you further?",
+            ];
+
+            return defaults[Math.floor(Math.random() * defaults.length)];
+        }
+
+        // Load voices
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+            const select = document.getElementById('voiceSelect');
+            select.innerHTML = '';
+
+            voices.forEach((voice, i) => {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                select.appendChild(option);
+            });
+
+            // Default to English voice
+            const englishVoice = voices.findIndex(v => v.lang.startsWith('en'));
+            if (englishVoice >= 0) {
+                select.value = englishVoice;
+                currentVoice = voices[englishVoice];
+            }
+        }
+
+        speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+
+        document.getElementById('voiceSelect').addEventListener('change', (e) => {
+            currentVoice = voices[e.target.value];
+        });
+
+        // Sliders
+        document.getElementById('pitchSlider').addEventListener('input', (e) => {
+            pitch = parseFloat(e.target.value);
+            document.getElementById('pitchValue').textContent = pitch.toFixed(1);
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            speed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = speed.toFixed(1);
+        });
+
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            volume = parseFloat(e.target.value);
+            document.getElementById('volumeValue').textContent = volume.toFixed(1);
+        });
+
+        // Speak function
+        function speak(text) {
+            return new Promise((resolve) => {
+                speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = currentVoice;
+                utterance.pitch = pitch;
+                utterance.rate = speed;
+                utterance.volume = volume;
+
+                utterance.onstart = () => {
+                    setStatus('<span class="speaking-indicator"></span> AI Speaking...');
+                };
+
+                utterance.onend = () => {
+                    setStatus('🎤 Listening...');
+                    resolve();
+                };
+
+                speechSynthesis.speak(utterance);
+                lastResponse = text;
+            });
+        }
+
+        // Add message to conversation
+        function addMessage(text, type) {
+            const convo = document.getElementById('conversation');
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.innerHTML = `
+                <div class="message-label">${type === 'user' ? '👤 You' : '🤖 AI'}</div>
+                <div class="bubble">${text}</div>
+            `;
+            convo.appendChild(msg);
+            convo.scrollTop = convo.scrollHeight;
+        }
+
+        // Call timer
+        function startTimer() {
+            callStartTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const secs = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('callTimer').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // Start call
+        document.getElementById('startCallBtn').addEventListener('click', startCall);
+
+        async function startCall() {
+            isCallActive = true;
+
+            document.getElementById('startCallBtn').style.display = 'none';
+            document.getElementById('endCallBtn').style.display = 'flex';
+            document.getElementById('micBtn').style.display = 'flex';
+
+            startTimer();
+            await startAudioCapture();
+            setupSpeechRecognition();
+            visualize();
+
+            setStatus('<span class="speaking-indicator"></span> AI Speaking...');
+            addMessage("Hello! I'm your AI assistant. How can I help you today?", 'bot');
+            await speak("Hello! I'm your AI assistant. How can I help you today?");
+
+            startListening();
+        }
+
+        // End call
+        document.getElementById('endCallBtn').addEventListener('click', endCall);
+
+        function endCall() {
+            isCallActive = false;
+            isListening = false;
+
+            if (recognition) recognition.stop();
+            if (timerInterval) clearInterval(timerInterval);
+            if (animationId) cancelAnimationFrame(animationId);
+            if (microphone) microphone.disconnect();
+            if (audioContext) audioContext.close();
+
+            speechSynthesis.cancel();
+
+            document.getElementById('startCallBtn').style.display = 'flex';
+            document.getElementById('endCallBtn').style.display = 'none';
+            document.getElementById('micBtn').style.display = 'none';
+            document.getElementById('callTimer').textContent = '00:00';
+
+            setStatus('Call ended');
+            clearWaveform();
+        }
+
+        // Mute
+        document.getElementById('muteBtn').addEventListener('click', () => {
+            isMuted = !isMuted;
+            document.getElementById('muteBtn').classList.toggle('active', isMuted);
+            document.getElementById('muteBtn').querySelector('.icon').textContent = isMuted ? '🔇' : '🎤';
+            setStatus(isMuted ? '🔇 Muted' : '🎤 Listening...');
+        });
+
+        // Speech recognition setup
+        function setupSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                setStatus('❌ Speech recognition not supported');
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                const isFinal = event.results[0].isFinal;
+
+                if (isFinal && !isMuted) {
+                    addMessage(transcript, 'user');
+                    setStatus('🤔 Thinking...');
+
+                    const response = getAIResponse(transcript);
+                    addMessage(response, 'bot');
+                    await speak(response);
+
+                    if (isCallActive) {
+                        startListening();
+                    }
+                } else {
+                    setStatus(`🎤 "${transcript}"...`);
+                }
+            };
+
+            recognition.onerror = (e) => {
+                if (e.error !== 'no-speech' && e.error !== 'aborted') {
+                    setStatus('⚠️ ' + e.error);
+                }
+                if (isCallActive && !isMuted) {
+                    setTimeout(startListening, 1000);
+                }
+            };
+
+            recognition.onend = () => {
+                if (isCallActive && !isMuted && !speechSynthesis.speaking) {
+                    setTimeout(startListening, 500);
+                }
+            };
+        }
+
+        function startListening() {
+            if (!recognition || !isCallActive || isMuted || speechSynthesis.speaking) return;
+            try {
+                recognition.start();
+                setStatus('🎤 Listening...');
+            } catch (e) {
+                setTimeout(startListening, 500);
+            }
+        }
+
+        // Audio visualization
+        async function startAudioCapture() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 512;
+                analyser.smoothingTimeConstant = 0.8;
+
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+            } catch (err) {
+                console.error('Mic error:', err);
+            }
+        }
+
+        function visualize() {
+            if (!isCallActive) return;
+            animationId = requestAnimationFrame(visualize);
+
+            if (!analyser) return;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteTimeDomainData(dataArray);
+
+            drawWaveform(dataArray);
+            updateBinaryDisplay(dataArray);
+        }
+
+        function drawWaveform(data) {
+            const width = waveformCanvas.offsetWidth;
+            const height = waveformCanvas.offsetHeight;
+
+            waveformCanvas.width = width * window.devicePixelRatio;
+            waveformCanvas.height = height * window.devicePixelRatio;
+            waveformCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+            waveformCtx.fillStyle = '#0d1117';
+            waveformCtx.fillRect(0, 0, width, height);
+
+            waveformCtx.strokeStyle = speechSynthesis.speaking ? '#00d9ff' : '#00ff88';
+            waveformCtx.lineWidth = 2;
+            waveformCtx.beginPath();
+
+            const sliceWidth = width / data.length;
+            let x = 0;
+
+            for (let i = 0; i < data.length; i++) {
+                const v = data[i] / 128.0;
+                const y = (v * height) / 2;
+                if (i === 0) waveformCtx.moveTo(x, y);
+                else waveformCtx.lineTo(x, y);
+                x += sliceWidth;
+            }
+
+            waveformCtx.stroke();
+        }
+
+        function updateBinaryDisplay(data) {
+            const sample = Array.from(data.slice(0, 32))
+                .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+                .join(' ');
+            document.getElementById('binaryDisplay').textContent = `HEX: ${sample}...`;
+        }
+
+        function clearWaveform() {
+            const width = waveformCanvas.offsetWidth;
+            const height = waveformCanvas.offsetHeight;
+            waveformCtx.fillStyle = '#0d1117';
+            waveformCtx.fillRect(0, 0, width, height);
+            document.getElementById('binaryDisplay').textContent = '[Call ended]';
+        }
+
+        function setStatus(html) {
+            document.getElementById('statusBar').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Building digital tools that make life easier.">
+	  <meta name="keywords" content="Xartrizev, Xartriz, XT, Xartrix, Xartrizev corp">
+  <title>Xartrizev — Apps & Solutions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080b12;
+      --bg2: #0d1120;
+      --bg3: #111827;
+      --surface: #141b2d;
+      --surface2: #1a2340;
+      --border: rgba(99,179,255,0.08);
+      --border2: rgba(99,179,255,0.15);
+      --accent: #3b82f6;
+      --accent2: #06b6d4;
+      --accent3: #8b5cf6;
+      --glow: rgba(59,130,246,0.25);
+      --text: #e8edf5;
+      --text2: #8b9ab5;
+      --text3: #4e5f7a;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+      --font-body: 'Instrument Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: default;
+      user-select: none;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 68px;
+      background: rgba(8,11,18,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s;
+    }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-logo span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-logo .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      -webkit-text-fill-color: unset;
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+      50% { opacity: 0.5; box-shadow: 0 0 16px var(--accent); }
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text2);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      color: var(--accent2);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-cta:hover {
+      background: rgba(6,182,212,0.1);
+      border-color: var(--accent2);
+    }
+
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 120px 48px 80px;
+    }
+
+    .hero-grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+    }
+
+    .hero-orb1 {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+      top: -100px; left: -100px;
+      pointer-events: none;
+    }
+
+    .hero-orb2 {
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%);
+      bottom: 0; right: 10%;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      max-width: 780px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      border: 1px solid rgba(6,182,212,0.2);
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+      background: rgba(6,182,212,0.05);
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 6px var(--accent2);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero-title .line2 {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--text2);
+      max-width: 560px;
+      margin-bottom: 40px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 0 30px rgba(59,130,246,0.3);
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      box-shadow: 0 0 40px rgba(59,130,246,0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: transparent;
+      color: var(--text2);
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      text-decoration: none;
+      border: 1px solid var(--border2);
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      color: var(--text);
+      border-color: rgba(99,179,255,0.3);
+      background: rgba(99,179,255,0.05);
+    }
+
+    .hero-stats {
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeLeft 0.7s 0.4s ease both;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      text-align: right;
+      width: 160px;
+    }
+
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-top: 4px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeLeft {
+      from { opacity: 0; transform: translate(24px, -50%); }
+      to { opacity: 1; transform: translate(0, -50%); }
+    }
+
+    section { padding: 100px 48px; }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      color: var(--text2);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 540px;
+    }
+
+    #about {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .about-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .feature-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      color: var(--text2);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .feature-pill:hover { border-color: var(--border2); color: var(--text); }
+
+    .feature-pill .icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .about-visual {
+      position: relative;
+    }
+
+    .about-card-stack {
+      position: relative;
+      height: 360px;
+    }
+
+    .about-card-stack .card {
+      position: absolute;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 24px;
+    }
+
+    .about-card-stack .card:nth-child(1) {
+      width: 280px; top: 0; left: 40px;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+    }
+
+    .about-card-stack .card:nth-child(2) {
+      width: 260px; bottom: 20px; left: 0;
+      background: var(--bg3);
+    }
+
+    .about-card-stack .card:nth-child(3) {
+      width: 200px; top: 80px; right: 0;
+      background: var(--bg3);
+      border-color: rgba(139,92,246,0.2);
+    }
+
+    .card-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .card-sub {
+      font-size: 0.82rem;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    #apps { max-width: 1400px; margin: 0 auto; }
+
+    .apps-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 56px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-tab {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 7px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-tab.active, .filter-tab:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .app-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border2);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px var(--glow);
+    }
+
+    .app-card-banner {
+      height: 140px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-card-banner .banner-pattern {
+      position: absolute;
+      inset: 0;
+      opacity: 0.5;
+    }
+
+    .app-icon-wrap {
+      position: relative;
+      z-index: 1;
+      width: 68px; height: 68px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      border: 2px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .app-card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+    .app-type-badge {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .badge-web { background: rgba(6,182,212,0.1); color: var(--accent2); }
+    .badge-mobile { background: rgba(139,92,246,0.1); color: #a78bfa; }
+    .badge-desktop { background: rgba(59,130,246,0.1); color: var(--accent); }
+
+    .app-name {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .app-desc {
+      font-size: 0.875rem;
+      color: var(--text2);
+      line-height: 1.6;
+      flex: 1;
+      margin-bottom: 20px;
+    }
+
+    .app-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .app-tag {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text3);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .app-card-footer {
+      display: flex;
+      gap: 10px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .app-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 7px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .app-btn-launch {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .app-btn-launch:hover { background: #2563eb; }
+
+    .app-btn-info {
+      background: var(--surface2);
+      color: var(--text2);
+    }
+
+    .app-btn-info:hover { background: var(--bg3); color: var(--text); }
+
+    #services {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .services-inner { max-width: 1200px; margin: 0 auto; }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 56px;
+    }
+
+    .service-card {
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      transition: border-color 0.3s, transform 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s;
+    }
+
+    .service-card:hover::before { transform: scaleX(1); }
+    .service-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+
+    .service-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .service-name {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .service-desc {
+      font-size: 0.88rem;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+
+    #contact { max-width: 1200px; margin: 0 auto; }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 80px;
+      align-items: start;
+      margin-top: 56px;
+    }
+
+    .contact-info h3 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .contact-info p {
+      color: var(--text2);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: var(--text2);
+      font-size: 0.9rem;
+      user-select: text;
+    }
+
+    .contact-detail .icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .contact-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-group label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--accent); }
+
+    .form-group textarea { resize: vertical; min-height: 120px; }
+
+    .form-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    .form-submit:hover {
+      background: #2563eb;
+      box-shadow: 0 0 30px rgba(59,130,246,0.4);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 60px 48px 40px;
+      background: var(--bg2);
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand p {
+      font-size: 0.88rem;
+      color: var(--text2);
+      line-height: 1.7;
+      margin-top: 14px;
+      max-width: 300px;
+    }
+
+    .footer-col h4 {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+
+    .footer-col ul { list-style: none; }
+
+    .footer-col ul li { margin-bottom: 10px; }
+
+    .footer-col ul li a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 0.88rem;
+      transition: color 0.2s;
+    }
+
+    .footer-col ul li a:hover { color: var(--text); }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-bottom p {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text3);
+      letter-spacing: 0.05em;
+    }
+
+    .social-links { display: flex; gap: 12px; }
+
+    .social-link {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .social-link:hover {
+      border-color: var(--border2);
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 520px;
+      width: 100%;
+      transform: scale(0.95);
+      transition: transform 0.3s;
+      position: relative;
+    }
+
+    .modal-overlay.open .modal { transform: scale(1); }
+
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      border-radius: 8px;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover { color: var(--text); }
+
+    .modal-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+
+    .modal h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .modal p {
+      color: var(--text2);
+      line-height: 1.7;
+      font-size: 0.93rem;
+      margin-bottom: 24px;
+    }
+
+    .modal-actions { display: flex; gap: 12px; }
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 2000;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: var(--text);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(.175,.885,.32,1.275);
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 1.2rem; }
+
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .nav-hamburger span {
+      width: 22px; height: 2px;
+      background: var(--text2);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    @media (max-width: 1024px) {
+      nav { padding: 0 24px; }
+      .nav-links, .nav-cta { display: none; }
+      .nav-hamburger { display: flex; }
+      #hero { padding: 120px 24px 80px; }
+      .hero-stats { display: none; }
+      section { padding: 80px 24px; }
+      .about-grid { grid-template-columns: 1fr; gap: 48px; }
+      .about-card-stack { display: none; }
+      .services-grid { grid-template-columns: 1fr 1fr; }
+      .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+      footer { padding: 48px 24px 32px; }
+    }
+
+    @media (max-width: 640px) {
+      .apps-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+      .services-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .footer-top { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav id="navbar">
+    <a href="#" class="nav-logo">
+      <span>Xartrizev</span>Corp
+      <span class="dot"></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#apps">Our Apps</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#apps" class="nav-cta">View Apps</a>
+    <div class="nav-hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <section id="hero">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-orb1"></div>
+    <div class="hero-orb2"></div>
+    <div class="hero-content">
+      <div class="hero-badge">Innovating Digital Experiences</div>
+      <h1 class="hero-title">
+        Building the<br>
+        <span class="line2">Future of Apps</span>
+      </h1>
+      <p class="hero-desc">
+        We design and develop powerful web apps and mobile solutions that solve real problems. Explore our full suite of products — all in one place.
+      </p>
+      <div class="hero-actions">
+        <a href="#apps" class="btn-primary">
+          <span>Explore Our Apps</span>
+          <span>→</span>
+        </a>
+        <a href="#contact" class="btn-secondary">
+          <span>Get in Touch</span>
+        </a>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <div class="stat-num">12+</div>
+        <div class="stat-label">Apps Launched</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">50K</div>
+        <div class="stat-label">Active Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">99%</div>
+        <div class="stat-label">Uptime</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="about-grid">
+      <div>
+        <div class="section-label">Who We Are</div>
+        <h2 class="section-title">A studio built around great software</h2>
+        <p class="section-desc">
+          Xartrizev is a technology company focused on creating high-quality digital products. From mobile apps to enterprise web platforms, we build software that people love to use.
+        </p>
+        <div class="about-features">
+          <div class="feature-pill"><span class="icon">⚡</span> Fast &amp; Reliable</div>
+          <div class="feature-pill"><span class="icon">🔒</span> Secure by Design</div>
+          <div class="feature-pill"><span class="icon">🌍</span> Cross-Platform</div>
+          <div class="feature-pill"><span class="icon">♿</span> Accessible</div>
+          <div class="feature-pill"><span class="icon">🔄</span> Always Updating</div>
+          <div class="feature-pill"><span class="icon">🧩</span> Modular Builds</div>
+        </div>
+      </div>
+      <div class="about-visual">
+        <div class="about-card-stack">
+          <div class="card">
+            <div class="card-label">Total Downloads</div>
+            <div class="card-value">2.4M+</div>
+            <div class="card-sub">Across all platforms</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Avg. App Rating</div>
+            <div class="card-value">4.8 ★</div>
+            <div class="card-sub">User satisfaction</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Founded</div>
+            <div class="card-value">2019</div>
+            <div class="card-sub">5+ years building</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="apps-section" style="padding: 100px 48px;">
+    <div id="apps" style="max-width:1400px; margin: 0 auto;">
+      <div class="apps-header reveal">
+        <div>
+          <div class="section-label">Our Products</div>
+          <h2 class="section-title">All Apps &amp; Web Tools</h2>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterApps('all', this)">All</button>
+          <button class="filter-tab" onclick="filterApps('web', this)">Web Apps</button>
+          <button class="filter-tab" onclick="filterApps('mobile', this)">Mobile</button>
+          <button class="filter-tab" onclick="filterApps('desktop', this)">Desktop</button>
+        </div>
+      </div>
+      <div class="apps-grid" id="appsGrid"></div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="services-inner">
+      <div class="reveal" style="text-align:center; max-width:600px; margin:0 auto 0;">
+        <div class="section-label">What We Do</div>
+        <h2 class="section-title">Services &amp; Expertise</h2>
+        <p class="section-desc" style="margin:0 auto;">
+          Beyond our own products, we bring our technical depth to custom software projects.
+        </p>
+      </div>
+      <div class="services-grid">
+        <div class="service-card reveal">
+          <span class="service-icon">🖥️</span>
+          <div class="service-name">Web App Development</div>
+          <p class="service-desc">Full-stack web applications built with modern frameworks. Scalable, secure, and engineered for performance.</p>
+        </div>
+        <div class="service-card reveal">
+          <span class="service-icon">📱</span>
+          <div class="service-name">Mobile Development</div>
+          <p class="service-desc">Native and cross-platform mobile apps for iOS and Android that deliver smooth, intuitive experiences.</p>
+        </div>
+        <div class="service-card reveal">
+          <span class="service-icon">🎨</span>
+          <div class="service-name">UI/UX Design</div>
+          <p class="service-desc">User research, wireframing, and pixel-perfect visual design that converts visitors into loyal users.</p>
+        </div>
+        <div class="service-card reveal">
+          <span class="service-icon">☁️</span>
+          <div class="service-name">Cloud & DevOps</div>
+          <p class="service-desc">Infrastructure setup, CI/CD pipelines, containerization, and cloud deployments on AWS, GCP, or Azure.</p>
+        </div>
+        <div class="service-card reveal">
+          <span class="service-icon">🤖</span>
+          <div class="service-name">AI Integration</div>
+          <p class="service-desc">Embed intelligent features into your products — from NLP and recommendations to predictive analytics.</p>
+        </div>
+        <div class="service-card reveal">
+          <span class="service-icon">🛡️</span>
+          <div class="service-name">Security Auditing</div>
+          <p class="service-desc">Penetration testing, code reviews, and security hardening to keep your software and users safe.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="reveal">
+      <div class="section-label">Get In Touch</div>
+      <h2 class="section-title">Let's work together</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="reveal">
+        <div class="contact-info">
+          <h3>We'd love to hear from you</h3>
+          <p>Whether you have a project idea, a question about our apps, or want to explore a partnership — our team is ready to talk.</p>
+          <div class="contact-detail">
+            <div class="icon">📧</div>
+            <span>xueltimiogok@gmail.com</span>
+          </div>
+          <div class="contact-detail">
+            <div class="icon">📞</div>
+            <span>+234 (703) 285-8895</span>
+          </div>
+          <div class="contact-detail">
+            <div class="icon">📍</div>
+            <span>Abuja, Nigeria</span>
+          </div>
+        </div>
+      </div>
+      <div class="contact-form reveal">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" placeholder="John" id="fname">
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" placeholder="Doe" id="lname">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="john@example.com" id="email">
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <select id="subject">
+            <option value="">Select a topic…</option>
+            <option>App Feedback</option>
+            <option>Business Inquiry</option>
+            <option>Technical Support</option>
+            <option>Partnership</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea placeholder="Tell us more about your project or question…" id="message"></textarea>
+        </div>
+        <button class="form-submit" onclick="submitForm()">Send Message →</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo" style="font-size:1.1rem;">
+            <span>Xartrizev</span>Corp <span class="dot"></span>
+          </a>
+          <p>Building digital tools that make life easier. Explore our apps and reach out anytime.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Products</h4>
+          <ul>
+            <li><a href="#apps">All Apps</a></li>
+            <li><a href="#apps">Web Tools</a></li>
+            <li><a href="#apps">Mobile Apps</a></li>
+            <li><a href="#apps">Desktop Apps</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#contact">Careers</a></li>
+            <li><a href="#contact">Blog</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 Xartrizev. All rights reserved.</p>
+        <div class="social-links">
+          <a class="social-link" href="#" title="Twitter">𝕏</a>
+          <a class="social-link" href="#" title="LinkedIn">in</a>
+          <a class="social-link" href="#" title="GitHub">⌥</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+      <button class="modal-close" onclick="closeModalBtn()">✕</button>
+      <div class="modal-icon" id="modalIcon"></div>
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <span class="toast-icon">✔</span>
+    <span id="toastMsg">Message sent!</span>
+  </div>
+
+  <script>
+    const apps = [
+      {
+        id: 1, name: "Mental Quest", type: "web",
+        icon: "🧠", color: "linear-gradient(135deg,#1e3a5f,#1d4ed8)",
+        short: "Test your mental speed and accuracy",
+        long: "No details",
+        tags: ["Maths","Education","Entertainment"],
+        url: "https://xartrizev.pages.dev/mental_quest/Lobby.html"
+      },
+      {
+        id: 2, name: "Zrypt Chat", type: "web",
+        icon: "❔", color: "linear-gradient(135deg,#1e1b4b,#7c3aed)",
+        short: "Create and join anonymous group chats - without email or phone number authentication.",
+        long: "Create and join anonymous group chats - without email or phone number authentication.",
+        tags: ["Anonymous","Group chat","Privacy"],
+        url: "https://xartrizev.pages.dev/zrypt-chat.htm"
+      },
+      {
+        id: 3, name: "Cybria", type: "web",
+        icon: "🗯", color: "linear-gradient(135deg,#083344,#0891b2)",
+        short: "Your brutally honest AI assistant.",
+        long: "Cybria can make mistakes — and it knows it, it just doesn't care.",
+        tags: ["AI","Assistant","Sarcasm"],
+        url: "https://xartrizev.pages.dev/cybria.html"
+      },
+      {
+        id: 10, name: "FlowBoard", type: "web",
+        icon: "📋", color: "linear-gradient(135deg,#1e3a5f,#1d4ed8)",
+        short: "Project management for fast-moving teams.",
+        long: "FlowBoard is a Kanban-style project management tool built for speed. Drag-and-drop tasks, set priorities, and track sprint progress with a real-time team dashboard.",
+        tags: ["Productivity","Teams","Kanban"],
+        url: "#", demo: "#"
+      },
+      {
+        id: 4, name: "ShipFast", type: "desktop",
+        icon: "🚀", color: "linear-gradient(135deg,#052e16,#16a34a)",
+        short: "CLI deployment tool for zero-downtime releases.",
+        long: "ShipFast is a desktop and CLI app that automates blue-green deployments, rollbacks, and release notes generation — so you ship faster without the fear.",
+        tags: ["DevOps","CI/CD","CLI"],
+        url: "#", demo: "#"
+      },
+      {
+        id: 5, name: "GlyphStudio", type: "web",
+        icon: "✍️", color: "linear-gradient(135deg,#2d1b69,#c026d3)",
+        short: "Collaborative design tool for UI teams.",
+        long: "GlyphStudio is a browser-based vector design tool with real-time multiplayer collaboration, component libraries, and one-click handoff to developers.",
+        tags: ["Design","Collaboration","UI"],
+        url: "#", demo: "#"
+      },
+      {
+        id: 6, name: "EchoChat", type: "mobile",
+        icon: "💬", color: "linear-gradient(135deg,#1c1917,#ea580c)",
+        short: "End-to-end encrypted team messaging.",
+        long: "EchoChat offers encrypted direct messages, channels, voice rooms, and file sharing. Lightweight, fast, and open-source. iOS and Android.",
+        tags: ["Messaging","E2E","Open Source"],
+        url: "#", demo: "#"
+      },
+      {
+        id: 7, name: "InvoiceZen", type: "web",
+        icon: "🧾", color: "linear-gradient(135deg,#1c1917,#b45309)",
+        short: "Invoicing and billing for freelancers.",
+        long: "InvoiceZen lets you create beautiful invoices, track payments, set recurring billing, and accept Stripe payments — all in minutes, no accountant needed.",
+        tags: ["Finance","Freelance","Billing"],
+        url: "#", demo: "#"
+      },
+      {
+        id: 8, name: "ScanAI", type: "mobile",
+        icon: "🔍", color: "linear-gradient(135deg,#0c0a09,#0284c7)",
+        short: "AI-powered document scanner and OCR.",
+        long: "Point your camera at any document. ScanAI instantly digitizes, cleans, and exports it as a searchable PDF. Supports 40+ languages with 99.2% OCR accuracy.",
+        tags: ["AI","OCR","Documents"],
+        url: "#", demo: "#"
+      },
+      {
+        id: 9, name: "DataForge", type: "desktop",
+        icon: "⚙️", color: "linear-gradient(135deg,#0f172a,#64748b)",
+        short: "ETL and data pipeline builder — no code.",
+        long: "DataForge is a desktop app for building visual ETL pipelines. Connect databases, APIs, and files; transform data with a drag-and-drop node editor; schedule runs.",
+        tags: ["Data","No-Code","ETL"],
+        url: "#", demo: "#"
+      }
+    ];
+
+    let currentFilter = 'all';
+
+    function renderApps(filter) {
+      const grid = document.getElementById('appsGrid');
+      const filtered = filter === 'all' ? apps : apps.filter(a => a.type === filter);
+      grid.innerHTML = '';
+
+      filtered.forEach((app, i) => {
+        const typeLabel = { web: 'Web App', mobile: 'Mobile', desktop: 'Desktop' }[app.type];
+        const badgeClass = { web: 'badge-web', mobile: 'badge-mobile', desktop: 'badge-desktop' }[app.type];
+
+        const card = document.createElement('div');
+        card.className = 'app-card reveal';
+        card.style.animationDelay = `${i * 0.05}s`;
+        card.innerHTML = `
+          <div class="app-card-banner">
+            <div class="banner-pattern" style="background:${app.color};"></div>
+            <div class="app-icon-wrap">${app.icon}</div>
+          </div>
+          <div class="app-card-body">
+            <span class="app-type-badge ${badgeClass}">${typeLabel}</span>
+            <div class="app-name">${app.name}</div>
+            <p class="app-desc">${app.short}</p>
+            <div class="app-tags">
+              ${app.tags.map(t => `<span class="app-tag">${t}</span>`).join('')}
+            </div>
+          </div>
+          <div class="app-card-footer">
+            <a href="${app.url}" class="app-btn app-btn-launch" onclick="launchApp(event, ${app.id})">
+              🚀 Launch
+            </a>
+            <button class="app-btn app-btn-info" onclick="openModal(${app.id})">
+              Details
+            </button>
+          </div>`;
+        grid.appendChild(card);
+      });
+
+      observeReveal();
+    }
+
+    function filterApps(type, btn) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderApps(type);
+    }
+
+    function launchApp(e, id) {
+      e.preventDefault();
+      const app = apps.find(a => a.id === id);
+      if (app.url === '#') {
+        showToast(`🚀 ${app.name} — link coming soon!`);
+      } else {
+        window.open(app.url, '_blank');
+      }
+    }
+
+    function openModal(id) {
+      const app = apps.find(a => a.id === id);
+      document.getElementById('modalIcon').textContent = app.icon;
+      document.getElementById('modalIcon').style.background = app.color;
+      document.getElementById('modalTitle').textContent = app.name;
+      document.getElementById('modalDesc').textContent = app.long;
+      document.getElementById('modalActions').innerHTML = `
+        <a href="${app.url}" class="btn-primary" style="flex:1; justify-content:center;" onclick="launchApp(event,${app.id})">🚀 Launch App</a>
+        <button class="btn-secondary" onclick="closeModalBtn()" style="flex:1; justify-content:center; cursor:pointer;">Close</button>
+      `;
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('modalOverlay')) {
+        document.getElementById('modalOverlay').classList.remove('open');
+      }
+    }
+
+    function closeModalBtn() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') document.getElementById('modalOverlay').classList.remove('open');
+    });
+
+    const FORMSPREE_URL = 'https://formspree.io/f/mdavekqd';
+
+    async function submitForm() {
+      const fname = document.getElementById('fname').value.trim();
+      const lname = document.getElementById('lname').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const subject = document.getElementById('subject').value;
+      const message = document.getElementById('message').value.trim();
+
+      if (!fname || !email) {
+        showToast('⚠️ First name and email are required.');
+        return;
+      }
+
+      const btn = document.querySelector('.form-submit');
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      try {
+        const res = await fetch(FORMSPREE_URL, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: `${fname} ${lname}`.trim(),
+            email,
+            subject: subject || 'General Inquiry',
+            message
+          })
+        });
+
+        if (res.ok) {
+          showToast('Message sent! We\'ll get back to you shortly.');
+          ['fname','lname','email','subject','message'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+          });
+        } else {
+          const data = await res.json();
+          const errMsg = data?.errors?.map(e => e.message).join(', ') || 'Submission failed.';
+          showToast(`❌ Error: ${errMsg}`);
+        }
+      } catch (err) {
+        showToast('❌ Network error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Message →';
+      }
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function observeReveal() {
+      const els = document.querySelectorAll('.reveal:not(.visible)');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.1 });
+      els.forEach(el => io.observe(el));
+    }
+
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').style.background =
+        window.scrollY > 20 ? 'rgba(8,11,18,0.97)' : 'rgba(8,11,18,0.8)';
+    });
+
+    function toggleMenu() {
+      const links = document.querySelector('.nav-links');
+      const cta = document.querySelector('.nav-cta');
+      if (!links) return;
+      const isOpen = links.style.display === 'flex';
+      links.style.cssText = isOpen ? '' : 'display:flex;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:rgba(8,11,18,0.98);padding:24px 24px;gap:20px;border-bottom:1px solid rgba(99,179,255,0.1);z-index:99;';
+      if (cta) cta.style.display = isOpen ? '' : 'none';
+    }
+
+    renderApps('all');
+    observeReveal();
+  </script>
+</body>
+</html>

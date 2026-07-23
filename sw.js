@@ -2,7 +2,7 @@ self.addEventListener('fetch', function(event) {});
 
 self.addEventListener('push', function(event) {
   const data = event.data ? event.data.json() : {};
-  const title = data.title || 'New Message';
+  const title = data.group ? `${data.group} • ${data.title}` : data.title || 'New Message';
   const options = {
     body: data.body || '',
     icon: 'icon-192.png',
@@ -17,7 +17,6 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  console.log('Notification URL:', event.notification.data.url);
   event.waitUntil(
     clients.openWindow(event.notification.data.url)
   );

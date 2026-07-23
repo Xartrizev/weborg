@@ -17,6 +17,7 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+  console.log('Notification URL:', event.notification.data.url);
   event.waitUntil(
     clients.openWindow(event.notification.data.url)
   );
